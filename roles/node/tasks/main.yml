@@ -1,0 +1,21 @@
+---
+# tasks file for node
+- name: Install nodejs packages
+  apt: 
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - nodejs
+      - npm
+
+- name: Update nodejs packages
+  npm: 
+    name: "{{ item }}"
+    global: yes
+    state: present
+  loop:
+    - n
+
+- name: run n command to change to the stable version
+  command: n stable

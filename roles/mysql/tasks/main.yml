@@ -1,0 +1,68 @@
+---
+# tasks file for mysql
+- name: Install deb package
+  apt:
+    deb: https://dev.mysql.com/get/mysql-apt-config_0.8.15-1_all.deb
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: Install MySQL packages
+  apt: 
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - mysql-server
+      - python3-pip
+
+- name: Enable mysqld
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Upgrade pip
+  pip:
+    name: pip
+    executable: pip3
+    state: latest
+
+- name: Install pip packages
+  pip:
+    name: PyMySQL
+    executable: pip3
+    state: present
+
+- name: Put my.cnf
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+    mode: 0600
+
+- name: run mysql_secure_installation
+  command: mysql_secure_installation -uroot -p"{{ mysql_root_password }}" -D
+
+- name: update expired root user password
+  shell: >
+    mysql -uroot -NBe
+    'ALTER USER "root"@"localhost"
+    IDENTIFIED WITH mysql_native_password BY "{{ mysql_root_password }}";'
+
+- name: Create mysql client user
+  mysql_user:
+    login_user: root
+    name: "{{ item }}"
+    password: "{{ mysql_writer_password }}"
+    priv: '*.*:ALL,GRANT'
+    state: present
+    host: '%'
+  loop:
+    - writer
+
+- name: Create a new database with name 'laravel'
+  mysql_db:
+    login_user: root
+    name: laravel
+    state: present

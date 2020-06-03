@@ -1,0 +1,71 @@
+---
+# tasks file for common
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: apt upgrade
+  apt:
+    upgrade: 'yes'
+  notify: reboot
+
+- name: Set timezone to Asia/Tokyo
+  timezone:
+    name: Asia/Tokyo
+
+- name: Allow everything and enable UFW
+  ufw:
+    state: enabled
+    default: deny
+
+- name: Allow all access to tcp port 22
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+    src: "{{ item }}"
+  loop:
+    - '14.8.17.33/32'
+
+- name: Allow all access to tcp port 80
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+    src: "{{ item }}"
+  loop:
+    - '14.8.17.33/32'
+
+- name: Check file /swapfile1 already exists
+  stat:
+    path: /swapfile1
+  register: swapfile
+
+- name: Add /swapfile1
+  block:
+    - name: Execute dd
+      command: dd if=/dev/zero of=/swapfile1 bs=1M count=2048
+
+    - name: Modify permission
+      file:
+        path: /swapfile1
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: Create /swapfile1
+      command: mkswap /swapfile1
+
+    - name: Activate /swapfile1
+      command: swapon /swapfile1
+
+    - name: Add fstab
+      mount:
+        name: swap
+        src: /swapfile1
+        fstype: swap
+        opts: defaults
+        passno: 0
+        dump: 0
+        state: present
+  when: not swapfile.stat.exists

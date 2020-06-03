@@ -1,0 +1,60 @@
+---
+# tasks file for laravel
+- name: Install php packages
+  apt: 
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - composer
+      - php-zip
+      - php-mbstring
+      - php-xml
+      - php-pdo
+      - php-mysqlnd
+
+- name: Create directory
+  file:
+    path: /home/ubuntu/code
+    state: directory 
+    owner: ubuntu
+    group: ubuntu 
+    mode: 0755
+
+- name: Install laravel installer
+  become: no
+  composer:
+    command: require
+    global_command: yes
+    arguments: laravel/installer
+
+- name: Set path
+  lineinfile:
+    path: /home/ubuntu/.profile
+    line: 'export PATH=$PATH:/home/ubuntu/.config/composer/vendor/bin'
+
+- name: Reload .profile
+  become: no
+  shell: source /home/ubuntu/.profile
+  args:
+    executable: /bin/bash
+
+- name: Check file project directory already exists
+  stat:
+    path: /home/ubuntu/code/laravel
+  register: project
+
+- name: Generate project
+  block:
+    - name: Generate laravel project
+      become: no
+      shell: cd /home/ubuntu/code && /home/ubuntu/.config/composer/vendor/bin/laravel new laravel
+      args:
+        executable: /bin/bash
+
+    - name: Execute composer
+      become: no
+      composer:
+        command: update
+        working_dir: /home/ubuntu/code/laravel
+  when: not project.stat.exists

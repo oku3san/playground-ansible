@@ -1,0 +1,7 @@
+- hosts: playground
+  become: yes
+  roles:
+    - common
+    - mysql
+    - node
+    - laravel

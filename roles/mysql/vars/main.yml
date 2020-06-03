@@ -1,0 +1,4 @@
+---
+# vars file for mysql
+mysql_root_password: "test"
+mysql_writer_password: "test"
