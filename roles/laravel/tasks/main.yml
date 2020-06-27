@@ -28,6 +28,14 @@
     global_command: yes
     arguments: laravel/installer
 
+- name: Change permission
+  file:
+    path: /home/ubuntu/.composer
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    recurse: yes
+
 - name: Set path
   lineinfile:
     path: /home/ubuntu/.profile
