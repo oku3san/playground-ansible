@@ -32,6 +32,7 @@
   vars:
     packages:
       - docker-ce
+      - docker-compose
 
 - name: Enable docker
   service:
